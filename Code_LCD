@@ -1,0 +1,100 @@
+// Requires LiquidCrystal library by Arduino, Adafruit
+
+#include <Wire.h>
+#include <LiquidCrystal.h>
+
+String Letters = "";
+int Length = 0;
+bool BackLight = true;
+bool Power = true;
+bool DT = true;
+LiquidCrystal lcd(0x27, 16, 2);
+
+void Startup() {
+  
+    String StartUp = "Type something in Serial Monitor";
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(StartUp.substring(0, 16));  
+    lcd.setCursor(0, 1);
+    lcd.print(StartUp.substring(16));  
+    pinMode(2, OUTPUT);
+    pinMode(3, OUTPUT);
+    pinMode(4, OUTPUT);
+}
+
+void setup() {
+  Serial.begin(9600);
+  lcd.init();
+  lcd.backlight();
+  Startup();
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    String cmd = Serial.readStringUntil('\n');
+    cmd.trim();
+    
+    if (cmd == "Cls") {
+      delay(500);
+      lcd.clear();
+      Serial.println("Cleared screen");
+      return;
+    } 
+
+    if (cmd == "Backlight") {
+      BackLight = !BackLight;   
+      if (BackLight) {
+        lcd.backlight();
+        Serial.println("Backlight ON");
+      } else {
+        lcd.noBacklight();
+        Serial.println("Backlight OFF");
+      }
+      return;
+    }
+
+    if (cmd == "Power") {
+      Power = !Power;   
+      if (Power) {
+        lcd.display();
+        delay(20);
+        lcd.backlight();
+        Serial.println("LCD ON");
+      } else {
+        lcd.noDisplay();
+        lcd.noBacklight();
+        Serial.println("LCD OFF");
+      }
+      return;
+    }
+
+    Letters = cmd;
+    Letters.trim();
+    Length = Letters.length();           
+
+    Serial.print("Text is now: ");
+    Stack();                             
+  }
+}
+
+void Char() {
+    Length = Letters.length();
+}
+
+void Stack() {
+    Length = Letters.length();           
+    Serial.println(Length);              
+
+    for (int i = 0; i < Length; i += 32) {     
+      lcd.clear();                              
+      lcd.setCursor(0, 0);                      
+      lcd.print(Letters.substring(i, min(i + 16, Length)));       
+      lcd.setCursor(0, 1);                      
+      lcd.print(Letters.substring(i + 16, min(i + 32, Length)));   
+      delay(7500)                                 
+    }                                          
+
+    delay(500);
+    Startup();
+}
